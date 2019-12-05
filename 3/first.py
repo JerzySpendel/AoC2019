@@ -1,46 +1,72 @@
-import typing
 from __future__ import annotations
 
+import heapq
+import typing
 
 data = open('input', 'r').readlines()
 wires = [wire_data.split(',') for wire_data in data]
 
 
-def wire_data_to_points(wire_data, points=None):
-    """
-    Transforms data about one wire to list of 2-item tuples that represents points that the wire go through
-    """
-    points = points or []
+class Point:
+    def __init__(self, x, y):
+        self.x, self.y = x, y
 
-    if not wire_data:
-        return points
+    @property
+    def manhattan(self):
+        return abs(self.x) + abs(self.y)
 
-    instruction = wire_data[0][0]
-    instruction_value = int(wire_data[0][1:])
+    def __add__(self, other: Point) -> Point:
+        return Point(self.x + other.x, self.y + other.y)
 
-    if not points:
-        current_point = 0, 0
+    def __repr__(self):
+        return f"<Point x: {self.x}, y: {self.y}>"
+
+    def __hash__(self):
+        return hash((self.x, self.y))
+
+    def __eq__(self, other):
+        return hash(self) == hash(other)
+
+
+def wire_data_to_points(wire_data: typing.List[str]):
+    points = [Point(0, 0)]
+    for instruction in wire_data:
+        last_point = points[-1]
+        points += generate_points(last_point, instruction)
+
+    return points
+
+
+def generate_points(starting_point: Point, instruction):
+    direction = instruction[0]
+    direction_value = int(instruction[1:])
+
+    if direction == 'U':
+        dp = Point(0, 1)
+    elif direction == 'D':
+        dp = Point(0, -1)
+    elif direction == 'R':
+        dp = Point(1, 0)
     else:
-        current_point = points[-1]
+        dp = Point(-1, 0)
 
-    if instruction == 'U':
-        new_point = (current_point[0], current_point[1] + instruction_value)
-    elif instruction == 'R':
-        new_point = (current_point[0] + instruction_value, current_point[1])
-    elif instruction == 'L':
-        new_point = (current_point[0] - instruction_value, current_point[1])
-    elif instruction == 'D':
-        new_point = (current_point[0], current_point[1] - instruction_value)
+    new_points = [starting_point + dp]
 
-    return wire_data_to_points(wire_data[1:], points + [new_point])
+    for _ in range(2, direction_value + 1):
+        new_points.append(new_points[-1] + dp)
+
+    return new_points
 
 
-def get_intersections(wire_1: typing.List[typing.Tuple[int, int]], wire_2: typing.List[typing.Tuple[int, int]]):
-    pass
+points_1 = wire_data_to_points(wires[0])
+points_2 = wire_data_to_points(wires[1])
 
+intersections = set(points_1) & set(points_2)
 
-points_from_wire_1 = wire_data_to_points(wires[0])
-points_from_wire_2 = wire_data_to_points(wires[1])
-
-intersections = set(points_from_wire_1) & set(points_from_wire_2)
 print(intersections)
+
+print(
+    heapq.nsmallest(3, intersections, key=lambda obj: obj.manhattan)
+)
+
+
