@@ -17,6 +17,16 @@ def get_color_at(x: int, y: int, image: np.ndarray) -> int:
             return color
 
 
+def print_image(img: np.ndarray):
+    for line in img:
+        for pixel in line:
+            if pixel == 1:
+                print('.', end='')
+            elif pixel == 0:
+                print('0', end='')
+        print()
+
+
 data = [int(char) for char in open('input', 'r').read()]
 
 array = np.array(data).reshape(-1, 6, 25)
@@ -26,6 +36,6 @@ for x in range(wide):
     for y in range(tall):
         image[y][x] = get_color_at(x, y, array)
 
-decoded_image = Image.fromarray(image, mode='1')
-decoded_image.show()
+
+print_image(image)
 
